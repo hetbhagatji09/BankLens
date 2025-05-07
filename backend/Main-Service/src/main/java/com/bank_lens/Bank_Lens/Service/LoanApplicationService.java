@@ -15,7 +15,7 @@ import java.util.Map;
 @Service
 public class LoanApplicationService {
 
-    private static final String MODEL_URL = "http://localhost:8080/api/users";
+    private static final String MODEL_URL = "http://localhost:5000/predict";
 
     private final FileUpload fileUpload;
     private final LoanApplicationRepository repository;
@@ -26,28 +26,41 @@ public class LoanApplicationService {
     }
 
     public LoanApplication saveApplication(LoanApplication application, MultipartFile csvFile) {
-
         String path = "";
         try {
-            path = fileUpload.uploadFile(csvFile);
-        }catch (IOException _){
-            throw  new EntityNotFoundException("CSV File Not Found ");
+            path = fileUpload.uploadFile(csvFile); // Assuming fileUpload.uploadFile method is correct
+        } catch (IOException e) {
+            throw new EntityNotFoundException("CSV File Not Found");
         }
 
         application.setCSVFile(path);
-        RestTemplate restTemplate  = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
 
-        ResponseEntity<Map> outputOfModel = restTemplate.postForEntity(MODEL_URL,application,Map.class);
+        try {
+            System.out.println(application.getCSVFile());
+            System.out.println(application.getLoanAmount());
+            // Make a request to the ML model API
+            ResponseEntity<Map> outputOfModel = restTemplate.postForEntity(MODEL_URL, application, Map.class);
 
-        if (outputOfModel.getStatusCode().is2xxSuccessful() && outputOfModel.getBody() != null) {
-            Map<String, Object> ans = outputOfModel.getBody();
-            application.setConfidence((Float) ans.get("Confidence"));
-            application.setStatus((Boolean) ans.get("Status"));
-        } else {
-            throw new ModelFailedException("Model Can Not");
+            if (outputOfModel.getStatusCode().is2xxSuccessful() && outputOfModel.getBody() != null) {
+                Map<String, Object> ans = outputOfModel.getBody();
+
+                // Parse confidence and status from the model response safely
+                if (ans.containsKey("confidence") && ans.containsKey("status")) {
+                    application.setConfidence(Float.parseFloat(ans.get("confidence").toString()));
+                    application.setStatus(((Integer) ans.get("status")) == 1); // Status: 1 = No default, 0 = Default
+                } else {
+                    throw new ModelFailedException("Invalid model response: Missing 'confidence' or 'status'");
+                }
+            } else {
+                throw new ModelFailedException("Model API request failed with status: " + outputOfModel.getStatusCode());
+            }
+        } catch (Exception e) {
+            throw new ModelFailedException("Error calling the model: " + e.getMessage());
         }
 
-        return  repository.save(application);
+        // Save the loan application in the repository
+        return repository.save(application);
     }
 
 
