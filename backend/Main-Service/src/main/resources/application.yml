@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: Bank-Lens
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bank-lens
+    username: bank-lens
+    password: bank-lens
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 5321

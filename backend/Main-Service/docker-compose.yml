@@ -1,0 +1,10 @@
+services:
+  postgres:
+    container_name: BankLens_DB
+    image: postgres
+    environment:
+      POSTGRES_USER: 'bank-lens'
+      POSTGRES_PASSWORD: 'bank-lens'
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - 5432:5432
