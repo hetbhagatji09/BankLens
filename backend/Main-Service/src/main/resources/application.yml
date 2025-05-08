@@ -21,3 +21,4 @@ cloudinary:
     key: 139856511923716
     secret-key: i7Je6fCuZsclzG4kyO8b3s8N5hw
 
+MODEL_URL: http://localhost:5000/predict

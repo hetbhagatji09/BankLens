@@ -49,6 +49,32 @@ public class LoanApplicationController {
     public List<LoanApplication> getCurrentYearDataOfReject(){
         return service.findByYearAndRejected();
     }
+    @GetMapping("/yearData")
+    public Map<String,Object> getFourYearLoanData(){
+        return service.getSumOfLastFourYearsOfLoan();
+
+    }
+    @GetMapping("/quaterData")
+    public List<Float> getYearQuaterData(){
+        return service.reportByQ();
+    }
+    @GetMapping("/applications")
+    public List<LoanApplication> getApplications(){
+        return service.findAll();
+    }
+
+    @GetMapping("/firstFive")
+    public List<LoanApplication> getFirstFive(){
+        return service.findFirstFive();
+    }
+    @GetMapping("/{id}")
+    public LoanApplication getLoanApplicationById(@PathVariable Long id){
+        return  service.getLoanById(id);
+    }
+    @GetMapping("/all")
+    public List<LoanApplication> getLoanApplications(){
+        return service.findAll();
+    }
 
 
 }

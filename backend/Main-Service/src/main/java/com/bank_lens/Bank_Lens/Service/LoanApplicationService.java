@@ -4,6 +4,9 @@ import com.bank_lens.Bank_Lens.Entity.LoanApplication;
 import com.bank_lens.Bank_Lens.Error.ModelFailedException;
 import com.bank_lens.Bank_Lens.Repository.LoanApplicationRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -11,16 +14,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class LoanApplicationService {
 
-    private static final String MODEL_URL = "http://localhost:5000/predict";
+    @Value("${MODEL_URL}")
+    private String MODEL_URL;
 
     private final FileUpload fileUpload;
     private final LoanApplicationRepository repository;
@@ -71,15 +73,23 @@ public class LoanApplicationService {
         List<LoanApplication> currentYearApplication = this.findByYear();
 
         Map<Integer, List<LoanApplication>> grouped = currentYearApplication.stream()
-                .collect(Collectors.groupingBy(app -> app.getCreatedDate().getMonth()));
+                .collect(Collectors.groupingBy(app ->
+                        app.getCreatedDate()
+                                .toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .getMonthValue() - 1
+                ));
 
         List<Long> approveApplicationCount = new ArrayList<>(Collections.nCopies(12, 0L));
         List<Long> rejectedApplicationCount = new ArrayList<>(Collections.nCopies(12, 0L));
 
         grouped.forEach((month, monthlyApplications) -> {
-            long approved = monthlyApplications.stream().filter(LoanApplication::getStatus).count();
-            approveApplicationCount.set(month - 1, approved);
-            rejectedApplicationCount.set(month - 1, monthlyApplications.size() - approved);
+            long approved = monthlyApplications.stream()
+                    .filter(LoanApplication::getStatus)
+                    .count();
+
+            approveApplicationCount.set(month, approved);
+            rejectedApplicationCount.set(month, monthlyApplications.size() - approved);
         });
 
         return Map.of(
@@ -122,5 +132,82 @@ public class LoanApplicationService {
         return findByYear().stream().filter(e->!e.getStatus()).toList();
     }
 
+    private List<LoanApplication> getApplicationsFromLastFourYears() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.YEAR, -4);
+        Date fourYearsAgo = cal.getTime();
+        return repository.findAllFromLastFourYears(fourYearsAgo);
+    }
 
+    public Map<String,Object> getSumOfLastFourYearsOfLoan(){
+        var loanApplication = getApplicationsFromLastFourYears();
+
+        Map<Integer, List<LoanApplication>> filterLoanApplication = loanApplication.stream()
+                .collect(Collectors.groupingBy(
+                        application -> application.getCreatedDate().toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .getYear(),
+                        TreeMap::new,
+                        Collectors.toList()
+                ));
+
+        List<Integer> years = new ArrayList<>();
+        List<Long> totalLoanAmount = new ArrayList<>();
+
+        filterLoanApplication.forEach((year, applications) -> {
+            long totalAmount = applications.stream()
+                    .filter(LoanApplication::getStatus)
+                    .mapToLong(LoanApplication::getLoanAmount)
+                    .sum();
+
+            years.add(year);
+            totalLoanAmount.add(totalAmount);
+        });
+
+        return Map.of(
+                "Years", years,
+                "TotalAmount",totalLoanAmount
+        );
+    }
+
+
+    public List<Float> reportByQ() {
+        var loanApplications = findByYear();
+
+        Map<Integer, List<LoanApplication>> byQuarter = loanApplications.stream()
+                .collect(Collectors.groupingBy(app -> {
+                    int month = app.getCreatedDate()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .getMonthValue();
+                    return (month - 1) / 3;
+                }));
+
+        List<Float> response = new ArrayList<>(Collections.nCopies(4, 0F));
+
+        for (int q = 0; q < 4; q++) {
+            List<LoanApplication> apps = byQuarter.getOrDefault(q, Collections.emptyList());
+            if (!apps.isEmpty()) {
+                long approved = apps.stream().filter(LoanApplication::getStatus).count();
+                float pct = 100F * ((float) approved / apps.size());
+                response.set(q, pct);
+            }
+        }
+
+        return response;
+    }
+
+
+    public List<LoanApplication> findAll() {
+        return repository.findAll();
+    }
+
+    public List<LoanApplication> findFirstFive() {
+        Pageable topFive = PageRequest.of(0, 5);
+        return repository.findRecentLoanApplications(topFive);
+    }
+
+    public LoanApplication getLoanById(Long id) {
+        return repository.findById(id).orElse(null);
+    }
 }
