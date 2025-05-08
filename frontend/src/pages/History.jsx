@@ -48,7 +48,7 @@ function History() {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const response = await fetch('/api/applications')
+        const response = await fetch('http://localhost:5321/all')
         if (!response.ok) {
           throw new Error('Failed to fetch applications')
         }
@@ -58,7 +58,7 @@ function History() {
         // Format dates and calculate confidence if not present
         const formatted = data.map(app => ({
           ...app,
-          date: new Date(app.date).toISOString().split('T')[0],
+          date: new Date(app.createdDate).toISOString().split('T')[0],
           confidence: app.confidence ?? (app.status === 'Approved'
             ? Math.floor(Math.random() * 20) + 80
             : Math.floor(Math.random() * 30) + 40)
@@ -244,27 +244,27 @@ function History() {
               {getCurrentPageData().map((app) => (
                 <tr key={app.id}>
                   <td>#{app.id}</td>
-                  <td>{app.customerName}</td>
+                  <td>{app.name}</td>
                   <td>{new Date(app.date).toLocaleDateString()}</td>
-                  <td>${app.amount.toLocaleString()}</td>
+                  <td>₹{app.loanAmount.toLocaleString()}</td>
                   <td>
                     <span className="purpose-badge">
                       {app.loanPurpose.charAt(0).toUpperCase() + app.loanPurpose.slice(1).replace('-', ' ')}
                     </span>
                   </td>
                   <td>
-                    <span className={`status-badge ${app.status.toLowerCase()}`}>
-                      {app.status === 'Approved' ? <FaCheck /> : <FaTimes />}
+                    <span className={`status-badge ${app.status}`}>
+                      {app.status === true ? <FaCheck /> : <FaTimes />}
                       <span className="status-text">{app.status}</span>
                     </span>
                   </td>
                   <td>
                     <div className="confidence-bar-container">
                       <div 
-                        className={`confidence-bar ${app.status.toLowerCase()}`} 
-                        style={{ width: `${app.confidence}%` }}
+                        className={`confidence-bar ${app.status}`} 
+                        style={{ width: `${(app.confidence*100).toFixed(2)}%` }}
                       ></div>
-                      <span className="confidence-value">{app.confidence}%</span>
+                      <span className="confidence-value">{(app.confidence*100).toFixed(2)}%</span>
                     </div>
                   </td>
                   <td>
@@ -404,11 +404,11 @@ function History() {
           transition: width 0.5s ease;
         }
         
-        .confidence-bar.approved {
+        .confidence-bar.true {
           background-color: var(--success);
         }
         
-        .confidence-bar.rejected {
+        .confidence-bar.false {
           background-color: var(--error);
         }
         

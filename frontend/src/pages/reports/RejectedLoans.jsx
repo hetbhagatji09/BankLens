@@ -123,7 +123,7 @@ function RejectedLoans() {
               <tr key={loan.id}>
                 <td>#{loan.id}</td>
                 <td>{loan.name}</td>
-                <td>{loan.loanAmount.toLocaleString()}</td>
+                <td>₹{loan.loanAmount.toLocaleString()}</td>
                 <td>{loan.loanPurpose}</td>
                 <td>{new Date(loan.createdDate).toLocaleDateString()}</td>
                 <td>

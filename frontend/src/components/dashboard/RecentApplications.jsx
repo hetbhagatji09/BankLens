@@ -135,11 +135,11 @@ function RecentApplications({ applications }) {
           transition: width 0.5s ease;
         }
         
-        .confidence-bar.approved {
+        .confidence-bar.true {
           background-color: var(--success);
         }
         
-        .confidence-bar.rejected {
+        .confidence-bar.false {
           background-color: var(--error);
         }
         

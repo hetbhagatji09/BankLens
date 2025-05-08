@@ -91,7 +91,7 @@ function RejectedLoansPDF({ loans }) {
             <View key={loan.id} style={styles.tableRow}>
               <Text style={styles.tableCell}>#{loan.id}</Text>
               <Text style={styles.tableCell}>{loan.name}</Text>
-              <Text style={styles.tableCell}>{loan.loanAmount.toLocaleString()}</Text>
+              <Text style={styles.tableCell}>₹{loan.loanAmount.toLocaleString()}</Text>
               <Text style={styles.tableCell}>{loan.loanPurpose}</Text>
               <Text style={styles.tableCell}>
                 {new Date(loan.createdDate).toLocaleDateString()}
