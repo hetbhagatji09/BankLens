@@ -8,62 +8,68 @@ function Overview() {
   const [loanTypeData, setLoanTypeData] = useState(null);
 
   useEffect(() => {
-    const loadData = async () => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const yearly = {
-        labels: ['2020', '2021', '2022', '2023'],
-        datasets: [{
-          label: 'Total Loan Amount (Millions)',
-          data: [12.5, 15.8, 18.2, 22.4],
-          backgroundColor: 'rgba(98, 71, 170, 0.6)',
-          borderColor: 'rgba(98, 71, 170, 1)',
-          borderWidth: 1
-        }]
-      };
-
-      const approvalRate = {
-        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-        datasets: [{
-          label: 'Approval Rate (%)',
-          data: [65, 70, 68, 72],
-          backgroundColor: 'rgba(46, 139, 87, 0.6)',
-          borderColor: 'rgba(46, 139, 87, 1)',
-          borderWidth: 1
-        }]
-      };
-
-      const loanTypes = {
-        labels: ['Home', 'Business', 'Personal', 'Education', 'Vehicle'],
-        datasets: [{
-          label: 'Distribution by Loan Type',
-          data: [35, 25, 20, 12, 8],
-          backgroundColor: [
-            'rgba(50, 74, 142, 0.7)',
-            'rgba(98, 71, 170, 0.7)',
-            'rgba(138, 111, 212, 0.7)',
-            'rgba(157, 78, 221, 0.7)',
-            'rgba(199, 125, 255, 0.7)'
-          ],
-          borderColor: [
-            'rgba(50, 74, 142, 1)',
-            'rgba(98, 71, 170, 1)',
-            'rgba(138, 111, 212, 1)',
-            'rgba(157, 78, 221, 1)',
-            'rgba(199, 125, 255, 1)'
-          ],
-          borderWidth: 1
-        }]
-      };
-
-      setYearlyData(yearly);
-      setApprovalRateData(approvalRate);
-      setLoanTypeData(loanTypes);
+    const fetchData = async () => {
+      try {
+        const distributionRes = await fetch('http://localhost:5321/pie-chart');
+        if (!distributionRes.ok) throw new Error('Failed to fetch distribution data');
+        const distribution = await distributionRes.json();
+  
+        setLoanTypeData({
+          labels: distribution.Purpose,
+          datasets: [
+            {
+              label: 'Purpose Count',
+              data: distribution.PurposeCount,
+              backgroundColor: [
+                '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'
+              ],
+              borderWidth: 1
+            }
+          ]
+        });
+  
+        const yearlyRes = await fetch('http://localhost:5321/yearData');
+        if (!yearlyRes.ok) throw new Error('Failed to fetch yearly data');
+        const yearly = await yearlyRes.json();
+  
+        setYearlyData({
+          labels: yearly.Years, 
+          datasets: [{
+            label: 'Total Loan Amount',
+            data: yearly.TotalAmount,
+            backgroundColor: 'rgba(98, 71, 170, 0.6)',
+            borderColor: 'rgba(98, 71, 170, 1)',
+            borderWidth: 1
+          }]
+        });
+  
+        const approvalRes = await fetch('http://localhost:5321/quaterData');
+        // console.log(approvalRes.response)
+        if (!approvalRes.ok) throw new Error('Failed to fetch approval rate data');
+        const approval = await approvalRes.json();
+  
+        setApprovalRateData({
+          labels: ['Q1','Q2','Q3','Q4'],
+          datasets: [{
+            label: 'Approval Rate in Quaters (%)',
+            data: approval,
+            backgroundColor: 'rgba(46, 139, 87, 0.6)',
+            borderColor: 'rgba(46, 139, 87, 1)',
+            borderWidth: 1
+          }]
+        });
+  
+      } catch (error) {
+        console.error('Data Fetch Error:', error);
+      }
+  
       setLoading(false);
     };
-
-    loadData();
+  
+    fetchData();
   }, []);
+  
+  
 
   if (loading) {
     return (

@@ -5,24 +5,24 @@ import { FaUpload, FaTimesCircle } from 'react-icons/fa'
 function CustomerForm() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    customerName: '',
+    name: '',
     age: '',
     income: '',
     loanAmount: '',
     creditScore: '',
+    monthsEmployed: '',
     numCreditLines: '',
     interestRate: '',
     loanTerm: '',
-    dtiRatio: '',
+    dtiratio: '',
+    education: '',
     employmentType: '',
     maritalStatus: '',
     hasMortgage: '',
     hasDependents: '',
     loanPurpose: '',
     hasCoSigner: '',
-    education: '',
-    upiId: '',
-    statementFile: null
+    bankStatement: null
   })
   
   const [errors, setErrors] = useState({})
@@ -33,12 +33,14 @@ function CustomerForm() {
   const maritalStatuses = ['Single', 'Married', 'Divorced']
   const educationLevels = ["Bachelor's", "Master's", 'High School', 'PhD']
   const loanPurposes = [
-    { value: 'educational', label: 'Educational Loan' },
-    { value: 'homeloan', label: 'Home Loan' },
-    { value: 'car', label: 'Car Loan' },
-    { value: 'medical', label: 'Medical Loan' },
-    { value: 'business', label: 'Business Loan' },
-    { value: 'personal', label: 'Personal Loan' }
+    'Home',
+    'Car',
+    'Education',
+    'Business',
+    'Personal',
+    'Debt Consolidation',
+    'Medical',
+    'Other'
   ]
   
   const handleChange = (e) => {
@@ -53,124 +55,55 @@ function CustomerForm() {
   const handleFileChange = (e) => {
     const file = e.target.files[0]
     if (file) {
-      if (file.type === 'application/pdf' || file.type === 'application/vnd.ms-excel' || 
-          file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        setFormData(prev => ({ ...prev, statementFile: file }))
+      if (file.type === 'application/pdf' || 
+          file.type === 'application/vnd.ms-excel' || 
+          file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+          file.type === 'text/csv') {
+        setFormData(prev => ({ ...prev, bankStatement: file }))
         setFileName(file.name)
-        setErrors(prev => ({ ...prev, statementFile: null }))
+        setErrors(prev => ({ ...prev, bankStatement: null }))
       } else {
-        setErrors(prev => ({ ...prev, statementFile: 'Please upload a PDF or Excel file' }))
+        setErrors(prev => ({ ...prev, bankStatement: 'Please upload a PDF, Excel, or CSV file' }))
       }
     }
   }
   
   const clearFile = () => {
-    setFormData(prev => ({ ...prev, statementFile: null }))
+    setFormData(prev => ({ ...prev, bankStatement: null }))
     setFileName('')
   }
   
   const validateForm = () => {
     const newErrors = {}
     
-    if (!formData.customerName.trim()) {
-      newErrors.customerName = 'Customer name is required'
-    }
-    
-    if (!formData.age || formData.age < 18) {
-      newErrors.age = 'Age must be at least 18'
-    }
-    
-    if (!formData.income || formData.income <= 0) {
-      newErrors.income = 'Income is required and must be greater than 0'
-    }
-    
-    if (!formData.loanAmount || formData.loanAmount <= 0) {
-      newErrors.loanAmount = 'Loan amount is required and must be greater than 0'
-    }
-    
+    if (!formData.name.trim()) newErrors.name = 'Name is required'
+    if (!formData.age || formData.age < 18) newErrors.age = 'Age must be at least 18'
+    if (!formData.income || formData.income <= 0) newErrors.income = 'Income is required'
+    if (!formData.loanAmount || formData.loanAmount <= 0) newErrors.loanAmount = 'Loan amount is required'
     if (!formData.creditScore || formData.creditScore < 300 || formData.creditScore > 900) {
       newErrors.creditScore = 'Credit score must be between 300 and 900'
     }
-    
+    if (!formData.monthsEmployed || formData.monthsEmployed < 0) {
+      newErrors.monthsEmployed = 'Months employed must be 0 or greater'
+    }
     if (!formData.numCreditLines || formData.numCreditLines < 0) {
       newErrors.numCreditLines = 'Number of credit lines must be 0 or greater'
     }
-    
-    if (!formData.dtiRatio || formData.dtiRatio < 0 || formData.dtiRatio > 1) {
-      newErrors.dtiRatio = 'DTI ratio must be between 0 and 1'
+    if (!formData.interestRate || formData.interestRate < 0) {
+      newErrors.interestRate = 'Interest rate must be greater than 0'
     }
-    
-    if (!formData.employmentType) {
-      newErrors.employmentType = 'Employment type is required'
+    if (!formData.loanTerm) newErrors.loanTerm = 'Loan term is required'
+    if (!formData.dtiratio || formData.dtiratio < 0 || formData.dtiratio > 1) {
+      newErrors.dtiratio = 'DTI ratio must be between 0 and 1'
     }
-    
-    if (!formData.maritalStatus) {
-      newErrors.maritalStatus = 'Marital status is required'
-    }
-    
-    if (!formData.education) {
-      newErrors.education = 'Education level is required'
-    }
-    
-    if (!formData.upiId.trim()) {
-      newErrors.upiId = 'UPI ID is required'
-    } else if (!/^[\w\.\-]+@[\w\-]+$/.test(formData.upiId)) {
-      newErrors.upiId = 'Invalid UPI ID format'
-    }
-    
-    if (!formData.loanPurpose) {
-      newErrors.loanPurpose = 'Loan purpose is required'
-    }
-    
-    if (!formData.loanTerm) {
-      newErrors.loanTerm = 'Loan term is required'
-    }
-    
-    if (!formData.statementFile) {
-      newErrors.statementFile = 'Bank statement is required'
-    }
+    if (!formData.education) newErrors.education = 'Education is required'
+    if (!formData.employmentType) newErrors.employmentType = 'Employment type is required'
+    if (!formData.maritalStatus) newErrors.maritalStatus = 'Marital status is required'
+    if (!formData.loanPurpose) newErrors.loanPurpose = 'Loan purpose is required'
+    if (!formData.bankStatement) newErrors.bankStatement = 'Bank statement is required'
     
     return newErrors
   }
-  
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault()
-    
-  //   const newErrors = validateForm()
-  //   if (Object.keys(newErrors).length > 0) {
-  //     setErrors(newErrors)
-  //     return
-  //   }
-    
-  //   setIsSubmitting(true)
-    
-  //   try {
-  //     // Simulate API call
-  //     await new Promise(resolve => setTimeout(resolve, 1500))
-      
-  //     const applicationId = Math.floor(Math.random() * 1000)
-      
-  //     navigate(`/application/${applicationId}/result`, { 
-  //       state: { 
-  //         customerData: formData,
-  //         result: {
-  //           approved: Math.random() > 0.3,
-  //           confidence: Math.floor(Math.random() * 30) + 70,
-  //           riskFactors: [
-  //             'Credit Score',
-  //             'Loan Amount to Income Ratio',
-  //             'DTI Ratio'
-  //           ].filter(() => Math.random() > 0.5)
-  //         }
-  //       } 
-  //     })
-  //   } catch (error) {
-  //     console.error('Submission error:', error)
-  //     setErrors({ submit: 'An error occurred. Please try again.' })
-  //   } finally {
-  //     setIsSubmitting(false)
-  //   }
-  // }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -183,19 +116,34 @@ function CustomerForm() {
   
     setIsSubmitting(true)
   
-    // Prepare form data for sending to backend
     const form = new FormData()
-  
-    for (const key in formData) {
-      if (key === 'statementFile' && formData.statementFile) {
-        form.append('statementFile', formData.statementFile)
-      } else {
-        form.append(key, formData[key])
+    
+    // Create a copy of formData without the bankStatement file
+    const loanData = { ...formData }
+    delete loanData.bankStatement
+    
+    // Add numeric values as numbers, not strings
+    Object.keys(loanData).forEach(key => {
+      if (['age', 'income', 'loanAmount', 'creditScore', 'monthsEmployed', 
+           'numCreditLines', 'interestRate', 'loanTerm', 'dtiratio'].includes(key)) {
+        loanData[key] = Number(loanData[key])
       }
+      
+      if (['hasMortgage', 'hasDependents', 'hasCoSigner'].includes(key)) {
+        loanData[key] = loanData[key] === "1" ? 1 : 0
+      }
+    })
+    
+    // Append the loan data as JSON string
+    form.append('loan-data', JSON.stringify(loanData))
+    
+    // Append the bank statement file
+    if (formData.bankStatement) {
+      form.append('csv-file', formData.bankStatement)
     }
   
     try {
-      const response = await fetch('http://localhost:5000/api/customers', {
+      const response = await fetch('http://localhost:5321/loan-applications', {
         method: 'POST',
         body: form
       })
@@ -206,10 +154,9 @@ function CustomerForm() {
   
       const result = await response.json()
   
-      // Navigate to result page or show success message
-      navigate(`/application/${result.applicationId}/result`, {
+      navigate(`/application/${result.id}/result`, {
         state: {
-          customerData: formData,
+          customerData: loanData,
           result: result
         }
       })
@@ -221,24 +168,23 @@ function CustomerForm() {
     }
   }
   
-
   return (
     <form onSubmit={handleSubmit} className="customer-form">
       <div className="form-section">
         <h3 className="section-title">Personal Information</h3>
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="customerName" className="form-label">Customer Name</label>
+            <label htmlFor="name" className="form-label">Name</label>
             <input
               type="text"
-              id="customerName"
-              name="customerName"
-              className={`form-control ${errors.customerName ? 'error' : ''}`}
-              value={formData.customerName}
+              id="name"
+              name="name"
+              className={`form-control ${errors.name ? 'error' : ''}`}
+              value={formData.name}
               onChange={handleChange}
-              placeholder="Enter customer name"
+              placeholder="Enter name"
             />
-            {errors.customerName && <div className="error-message">{errors.customerName}</div>}
+            {errors.name && <div className="error-message">{errors.name}</div>}
           </div>
           
           <div className="form-group">
@@ -257,17 +203,20 @@ function CustomerForm() {
           </div>
           
           <div className="form-group">
-            <label htmlFor="upiId" className="form-label">UPI ID</label>
-            <input
-              type="text"
-              id="upiId"
-              name="upiId"
-              className={`form-control ${errors.upiId ? 'error' : ''}`}
-              value={formData.upiId}
+            <label htmlFor="education" className="form-label">Education Level</label>
+            <select
+              id="education"
+              name="education"
+              className={`form-control ${errors.education ? 'error' : ''}`}
+              value={formData.education}
               onChange={handleChange}
-              placeholder="username@bank"
-            />
-            {errors.upiId && <div className="error-message">{errors.upiId}</div>}
+            >
+              <option value="">Select education level</option>
+              {educationLevels.map(level => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
+            {errors.education && <div className="error-message">{errors.education}</div>}
           </div>
         </div>
         
@@ -283,10 +232,25 @@ function CustomerForm() {
             >
               <option value="">Select employment type</option>
               {employmentTypes.map(type => (
-                <option key={type} value={type.toLowerCase()}>{type}</option>
+                <option key={type} value={type}>{type}</option>
               ))}
             </select>
             {errors.employmentType && <div className="error-message">{errors.employmentType}</div>}
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="monthsEmployed" className="form-label">Months Employed</label>
+            <input
+              type="number"
+              id="monthsEmployed"
+              name="monthsEmployed"
+              className={`form-control ${errors.monthsEmployed ? 'error' : ''}`}
+              value={formData.monthsEmployed}
+              onChange={handleChange}
+              min="0"
+              placeholder="Enter months employed"
+            />
+            {errors.monthsEmployed && <div className="error-message">{errors.monthsEmployed}</div>}
           </div>
           
           <div className="form-group">
@@ -300,27 +264,10 @@ function CustomerForm() {
             >
               <option value="">Select marital status</option>
               {maritalStatuses.map(status => (
-                <option key={status} value={status.toLowerCase()}>{status}</option>
+                <option key={status} value={status}>{status}</option>
               ))}
             </select>
             {errors.maritalStatus && <div className="error-message">{errors.maritalStatus}</div>}
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="education" className="form-label">Education Level</label>
-            <select
-              id="education"
-              name="education"
-              className={`form-control ${errors.education ? 'error' : ''}`}
-              value={formData.education}
-              onChange={handleChange}
-            >
-              <option value="">Select education level</option>
-              {educationLevels.map(level => (
-                <option key={level} value={level.toLowerCase()}>{level}</option>
-              ))}
-            </select>
-            {errors.education && <div className="error-message">{errors.education}</div>}
           </div>
         </div>
       </div>
@@ -329,7 +276,7 @@ function CustomerForm() {
         <h3 className="section-title">Financial Information</h3>
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="income" className="form-label">Monthly Income (₹)</label>
+            <label htmlFor="income" className="form-label">Monthly Income</label>
             <input
               type="number"
               id="income"
@@ -377,20 +324,20 @@ function CustomerForm() {
         
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="dtiRatio" className="form-label">DTI Ratio (0-1)</label>
+            <label htmlFor="dtiratio" className="form-label">DTI Ratio (0-1)</label>
             <input
               type="number"
-              id="dtiRatio"
-              name="dtiRatio"
-              className={`form-control ${errors.dtiRatio ? 'error' : ''}`}
-              value={formData.dtiRatio}
+              id="dtiratio"
+              name="dtiratio"
+              className={`form-control ${errors.dtiratio ? 'error' : ''}`}
+              value={formData.dtiratio}
               onChange={handleChange}
               min="0"
               max="1"
               step="0.01"
               placeholder="Enter DTI ratio"
             />
-            {errors.dtiRatio && <div className="error-message">{errors.dtiRatio}</div>}
+            {errors.dtiratio && <div className="error-message">{errors.dtiratio}</div>}
           </div>
           
           <div className="form-group">
@@ -400,8 +347,8 @@ function CustomerForm() {
                 <input
                   type="radio"
                   name="hasMortgage"
-                  value="yes"
-                  checked={formData.hasMortgage === 'yes'}
+                  value="1"
+                  checked={formData.hasMortgage === "1"}
                   onChange={handleChange}
                 /> Yes
               </label>
@@ -409,8 +356,8 @@ function CustomerForm() {
                 <input
                   type="radio"
                   name="hasMortgage"
-                  value="no"
-                  checked={formData.hasMortgage === 'no'}
+                  value="0"
+                  checked={formData.hasMortgage === "0"}
                   onChange={handleChange}
                 /> No
               </label>
@@ -424,8 +371,8 @@ function CustomerForm() {
                 <input
                   type="radio"
                   name="hasDependents"
-                  value="yes"
-                  checked={formData.hasDependents === 'yes'}
+                  value="1"
+                  checked={formData.hasDependents === "1"}
                   onChange={handleChange}
                 /> Yes
               </label>
@@ -433,8 +380,8 @@ function CustomerForm() {
                 <input
                   type="radio"
                   name="hasDependents"
-                  value="no"
-                  checked={formData.hasDependents === 'no'}
+                  value="0"
+                  checked={formData.hasDependents === "0"}
                   onChange={handleChange}
                 /> No
               </label>
@@ -445,19 +392,19 @@ function CustomerForm() {
         <div className="form-row">
           <div className="form-group">
             <label className="form-label">Bank Statement (Last 6 Months)</label>
-            <div className={`file-upload ${errors.statementFile ? 'error' : ''}`}>
+            <div className={`file-upload ${errors.bankStatement ? 'error' : ''}`}>
               <input
                 type="file"
-                id="statementFile"
-                name="statementFile"
+                id="bankStatement"
+                name="bankStatement"
                 onChange={handleFileChange}
-                accept=".pdf,.xls,.xlsx"
+                accept=".pdf,.xls,.xlsx,.csv"
                 className="file-input"
               />
               <div className="file-upload-content">
                 <FaUpload className="upload-icon" />
                 <span className="upload-text">
-                  {fileName || 'Upload PDF or Excel file'}
+                  {fileName || 'Upload PDF, Excel, or CSV file'}
                 </span>
                 {fileName && (
                   <button 
@@ -470,7 +417,7 @@ function CustomerForm() {
                 )}
               </div>
             </div>
-            {errors.statementFile && <div className="error-message">{errors.statementFile}</div>}
+            {errors.bankStatement && <div className="error-message">{errors.bankStatement}</div>}
           </div>
         </div>
       </div>
@@ -479,7 +426,7 @@ function CustomerForm() {
         <h3 className="section-title">Loan Details</h3>
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="loanAmount" className="form-label">Loan Amount (₹)</label>
+            <label htmlFor="loanAmount" className="form-label">Loan Amount</label>
             <input
               type="number"
               id="loanAmount"
@@ -494,22 +441,19 @@ function CustomerForm() {
           </div>
           
           <div className="form-group">
-            <label htmlFor="loanPurpose" className="form-label">Loan Purpose</label>
-            <select
-              id="loanPurpose"
-              name="loanPurpose"
-              className={`form-control ${errors.loanPurpose ? 'error' : ''}`}
-              value={formData.loanPurpose}
+            <label htmlFor="interestRate" className="form-label">Interest Rate (%)</label>
+            <input
+              type="number"
+              id="interestRate"
+              name="interestRate"
+              className={`form-control ${errors.interestRate ? 'error' : ''}`}
+              value={formData.interestRate}
               onChange={handleChange}
-            >
-              <option value="">Select loan purpose</option>
-              {loanPurposes.map(purpose => (
-                <option key={purpose.value} value={purpose.value}>
-                  {purpose.label}
-                </option>
-              ))}
-            </select>
-            {errors.loanPurpose && <div className="error-message">{errors.loanPurpose}</div>}
+              min="0"
+              step="0.1"
+              placeholder="Enter interest rate"
+            />
+            {errors.interestRate && <div className="error-message">{errors.interestRate}</div>}
           </div>
           
           <div className="form-group">
@@ -540,14 +484,31 @@ function CustomerForm() {
         
         <div className="form-row">
           <div className="form-group">
+            <label htmlFor="loanPurpose" className="form-label">Loan Purpose</label>
+            <select
+              id="loanPurpose"
+              name="loanPurpose"
+              className={`form-control ${errors.loanPurpose ? 'error' : ''}`}
+              value={formData.loanPurpose}
+              onChange={handleChange}
+            >
+              <option value="">Select loan purpose</option>
+              {loanPurposes.map(purpose => (
+                <option key={purpose} value={purpose}>{purpose}</option>
+              ))}
+            </select>
+            {errors.loanPurpose && <div className="error-message">{errors.loanPurpose}</div>}
+          </div>
+          
+          <div className="form-group">
             <label className="form-label">Has Co-Signer</label>
             <div className="radio-group">
               <label className="radio-label">
                 <input
                   type="radio"
                   name="hasCoSigner"
-                  value="yes"
-                  checked={formData.hasCoSigner === 'yes'}
+                  value="1"
+                  checked={formData.hasCoSigner === "1"}
                   onChange={handleChange}
                 /> Yes
               </label>
@@ -555,8 +516,8 @@ function CustomerForm() {
                 <input
                   type="radio"
                   name="hasCoSigner"
-                  value="no"
-                  checked={formData.hasCoSigner === 'no'}
+                  value="0"
+                  checked={formData.hasCoSigner === "0"}
                   onChange={handleChange}
                 /> No
               </label>
@@ -587,12 +548,6 @@ function CustomerForm() {
           max-width: 100%;
         }
         
-        .error-message {
-        color: red;
-        font-size: 0.875rem; /* optional: make it a bit smaller */
-        margin-top: 4px;     /* optional: spacing between input and error */
-        }
-
         .form-section {
           background-color: var(--neutral-0);
           border-radius: var(--border-radius-md);

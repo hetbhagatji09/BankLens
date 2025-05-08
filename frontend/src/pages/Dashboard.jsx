@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import RecentApplications from '../components/dashboard/RecentApplications.jsx';
 import Chart from '../components/dashboard/Chart.jsx';
+import axios from 'axios';
 
 function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -218,30 +219,88 @@ function Dashboard() {
         const distributionRes = await fetch('http://localhost:5321/pie-chart');
         if (!distributionRes.ok) throw new Error('Failed to fetch distribution data');
         const distribution = await distributionRes.json();
-
+        console.log(distribution);
+        
+        // Define your colors array
+        const backgroundColors = [
+          'rgba(50, 74, 142, 0.7)',
+          'rgba(98, 71, 170, 0.7)',
+          'rgba(138, 111, 212, 0.7)',
+          'rgba(157, 78, 221, 0.7)',
+          'rgba(199, 125, 255, 0.7)',
+          'rgba(114, 9, 183, 0.7)',
+          'rgba(74, 42, 128, 0.7)',
+        ];
+        
+        const borderColors = [
+          'rgba(50, 74, 142, 1)',
+          'rgba(98, 71, 170, 1)',
+          'rgba(138, 111, 212, 1)',
+          'rgba(157, 78, 221, 1)',
+          'rgba(199, 125, 255, 1)',
+          'rgba(114, 9, 183, 1)',
+          'rgba(74, 42, 128, 1)',
+        ];
+      
         const distributionChartData = {
-          labels: distribution.Purpose, 
+          labels: distribution.Purpose,
           datasets: [
             {
               label: 'Purpose Count',
-              data: distribution.PurposeCount, 
-              backgroundColor: [
-                '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'
-              ],
+              data: distribution.PurposeCount,
+              backgroundColor: backgroundColors,
+              borderColor: borderColors,
               borderWidth: 1
             }
           ]
         };
-
-        setDistributionData(distributionChartData);
         
+        setDistributionData(distributionChartData);
       } catch (error) {
         console.error('Distribution Data Error:', error);
       }
 
       setLoading(false);
-    };
+    
 
+    try {
+      // Fetch pie chart data using fetch
+      const distributionRes = await fetch('http://localhost:5321/pie-chart');
+      if (!distributionRes.ok) throw new Error('Failed to fetch distribution data');
+      const distribution = await distributionRes.json();
+      console.log(distribution);
+
+      const distributionChartData = {
+        labels: distribution.Purpose,
+        datasets: [
+          {
+            label: 'Purpose Count',
+            data: distribution.PurposeCount,
+            backgroundColor: [
+              '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'
+            ],
+            borderWidth: 1
+          }
+        ]
+      };
+
+      setDistributionData(distributionChartData);
+
+      // Fetch applications using axios
+      const response = await axios.get('http://localhost:5321/firstFive');
+      const data = response.data;
+
+      
+      
+
+      setRecentApplications(data);
+      // setFilteredApplications(firstFive);
+      // setTotalPages(1);
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      setLoading(false);
+    }
+    };
     fetchData();
   }, []);
   

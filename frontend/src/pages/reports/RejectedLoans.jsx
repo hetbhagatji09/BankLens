@@ -130,7 +130,7 @@ function RejectedLoans() {
                   <div className="confidence-bar-container">
                     <div 
                       className="confidence-bar"
-                      style={{ width: `${loan.confidence}%` }}
+                      style={{ width: `${loan.confidence*100}%` }}
                     ></div>
                     <span className="confidence-value">{(loan.confidence*100).toFixed(2)}%</span>
                   </div>

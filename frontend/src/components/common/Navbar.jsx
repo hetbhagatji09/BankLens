@@ -44,8 +44,8 @@ function Navbar({ toggleSidebar }) {
         </div>
 
         <div className="navbar-right">
-          <Link to="/about" className="nav-link">About Us</Link>
-          <Link to="/contact" className="nav-link">Contact Us</Link>
+          {/* <Link to="/about" className="nav-link">About Us</Link> */}
+          {/* <Link to="/contact" className="nav-link">Contact Us</Link> */}
 
           <div className="navbar-item user-dropdown">
             <button

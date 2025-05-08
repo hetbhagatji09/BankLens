@@ -1,55 +1,38 @@
 import { FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa'
-import { useState } from 'react';
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+import { useParams } from 'react-router-dom'
 
-// const [data, setData] = useState(null);
-// const [loading, setLoading] = useState(true);
-// const [error, setError] = useState(null);
+function PredictionDetails() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [loanApplication, setLoanApplication] = useState(null)
+  const { id } = useParams()
 
-function PredictionDetails({ result, customerData }) {
-  const { approved, confidence, riskFactors } = result || {
-    approved: false,
-    confidence: 0,
-    riskFactors: []
-  }
+  useEffect(() => {
+    const fetchLoanApplication = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5321/${id}`)
+        setLoanApplication(response.data)
+      } catch (err) {
+        setError('Failed to load application data')
+      } finally {
+        setLoading(false)
+      }
+    }
   
-  // Calculate estimated interest rate based on credit score and other factors
-  // This is a simplified model for demonstration
-  const calculateInterestRate = () => {
-    const baseRate = 5.99
-    const creditScore = parseInt(customerData?.creditScore || "700")
-    
-    let creditScoreAdjustment = 0
-    if (creditScore >= 800) creditScoreAdjustment = -1.5
-    else if (creditScore >= 750) creditScoreAdjustment = -1.0
-    else if (creditScore >= 700) creditScoreAdjustment = -0.5
-    else if (creditScore >= 650) creditScoreAdjustment = 0
-    else if (creditScore >= 600) creditScoreAdjustment = 0.5
-    else if (creditScore >= 550) creditScoreAdjustment = 1.0
-    else creditScoreAdjustment = 2.0
-    
-    // Adjust for employment status
-    const employmentStatus = customerData?.employmentStatus || ""
-    let employmentAdjustment = 0
-    if (employmentStatus === "unemployed") employmentAdjustment = 1.5
-    else if (employmentStatus === "part-time") employmentAdjustment = 0.5
-    else if (employmentStatus === "self-employed") employmentAdjustment = 0.3
-    
-    // Loan amount factor
-    const loanAmount = parseInt(customerData?.loanAmount || "0")
-    let loanAmountAdjustment = 0
-    if (loanAmount > 100000) loanAmountAdjustment = 0.2
-    else if (loanAmount < 10000) loanAmountAdjustment = -0.2
-    
-    const interestRate = (baseRate + creditScoreAdjustment + employmentAdjustment + loanAmountAdjustment).toFixed(2)
-    
-    return interestRate
-  }
+    if (id) {
+      fetchLoanApplication()
+    }
+  }, [id])
   
-  // Calculate monthly payment
+  // Calculate monthly payment based on loan details
   const calculateMonthlyPayment = () => {
-    const loanAmount = parseInt(customerData?.loanAmount || "0")
-    const loanTerm = parseInt(customerData?.loanTerm || "36")
-    const interestRate = parseFloat(calculateInterestRate())
+    if (!loanApplication) return "0.00"
+    
+    const loanAmount = loanApplication.loanAmount || 0
+    const loanTerm = loanApplication.loanTerm || 36
+    const interestRate = loanApplication.interestRate || 0
     
     // Monthly interest rate
     const monthlyRate = interestRate / 100 / 12
@@ -59,6 +42,38 @@ function PredictionDetails({ result, customerData }) {
     
     return isNaN(payment) ? "0.00" : payment.toFixed(2)
   }
+
+  // Calculate total repayment amount
+  const calculateTotalRepayment = () => {
+    const monthlyPayment = parseFloat(calculateMonthlyPayment())
+    const loanTerm = loanApplication?.loanTerm || 36
+    
+    return (monthlyPayment * loanTerm).toFixed(2)
+  }
+
+  // Calculate total interest paid
+  const calculateTotalInterest = () => {
+    const totalRepayment = parseFloat(calculateTotalRepayment())
+    const loanAmount = loanApplication?.loanAmount || 0
+    
+    return (totalRepayment - loanAmount).toFixed(2)
+  }
+
+  if (loading) {
+    return <div>Loading application data...</div>
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>
+  }
+
+  if (!loanApplication) {
+    return <div>No application data found.</div>
+  }
+
+  // Check if loan is approved based on Status field
+  const approved = loanApplication.status === true
+  const confidence = loanApplication.confidence || 0
 
   return (
     <div className="prediction-details">
@@ -75,46 +90,75 @@ function PredictionDetails({ result, customerData }) {
             <div className="confidence-bar-container">
               <div 
                 className={`confidence-bar ${approved ? 'approved' : 'rejected'}`} 
-                style={{ width: `${confidence}%` }}
+                style={{ width: `${(confidence*100).toFixed(2)}%` }}
               ></div>
             </div>
-            <span className="confidence-value">{confidence}%</span>
+            <span className="confidence-value">{(confidence*100).toFixed(2)}%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="loan-details card">
+        <h3 className="card-title">
+          <FaInfoCircle className="title-icon" />
+          Loan Details
+        </h3>
+        
+        <div className="details-grid">
+          <div className="detail-item">
+            <span className="detail-label">Interest Rate:</span>
+            <span className="detail-value">{loanApplication.interestRate || 0}%</span>
+          </div>
+          
+          <div className="detail-item">
+            <span className="detail-label">Loan Amount:</span>
+            <span className="detail-value">₹{(loanApplication.loanAmount || 0).toLocaleString()}</span>
+          </div>
+          
+          <div className="detail-item">
+            <span className="detail-label">Loan Term:</span>
+            <span className="detail-value">{loanApplication.loanTerm || 36} months</span>
+          </div>
+          
+          <div className="detail-item">
+            <span className="detail-label">Total Repayment:</span>
+            <span className="detail-value">
+            ₹{parseFloat(calculateTotalRepayment()).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              })}
+            </span>
+          </div>
+          
+          <div className="detail-item">
+            <span className="detail-label">Monthly Payment:</span>
+            <span className="detail-value">₹{calculateMonthlyPayment()}</span>
+          </div>
+          
+          <div className="detail-item">
+            <span className="detail-label">Loan Purpose:</span>
+            <span className="detail-value">{loanApplication.loanPurpose || 'N/A'}</span>
           </div>
         </div>
       </div>
       
       {approved && (
-        <div className="approval-details card">
+        <div className="payment-details card">
           <h3 className="card-title">
             <FaInfoCircle className="title-icon" />
-            Loan Terms
+            Payment Details
           </h3>
           
           <div className="details-grid">
             <div className="detail-item">
-              <span className="detail-label">Loan Amount:</span>
-              <span className="detail-value">${parseInt(customerData?.loanAmount || "0").toLocaleString()}</span>
-            </div>
-            
-            <div className="detail-item">
-              <span className="detail-label">Interest Rate:</span>
-              <span className="detail-value">{calculateInterestRate()}%</span>
-            </div>
-            
-            <div className="detail-item">
-              <span className="detail-label">Loan Term:</span>
-              <span className="detail-value">{customerData?.loanTerm || "36"} months</span>
-            </div>
-            
-            <div className="detail-item">
               <span className="detail-label">Monthly Payment:</span>
-              <span className="detail-value">${calculateMonthlyPayment()}</span>
+              <span className="detail-value">₹{calculateMonthlyPayment()}</span>
             </div>
             
             <div className="detail-item">
               <span className="detail-label">Total Repayment:</span>
               <span className="detail-value">
-                ${(parseFloat(calculateMonthlyPayment()) * parseInt(customerData?.loanTerm || "36")).toLocaleString(undefined, {
+              ₹{parseFloat(calculateTotalRepayment()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
                 })}
@@ -124,7 +168,7 @@ function PredictionDetails({ result, customerData }) {
             <div className="detail-item">
               <span className="detail-label">Total Interest:</span>
               <span className="detail-value">
-                ${((parseFloat(calculateMonthlyPayment()) * parseInt(customerData?.loanTerm || "36")) - parseInt(customerData?.loanAmount || "0")).toLocaleString(undefined, {
+              ₹{parseFloat(calculateTotalInterest()).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2
                 })}
@@ -144,32 +188,57 @@ function PredictionDetails({ result, customerData }) {
         </div>
       )}
       
-      {riskFactors && riskFactors.length > 0 && (
+      {!approved && (
         <div className="risk-factors card">
           <h3 className="card-title">
             <FaExclamationTriangle className="title-icon" />
-            Risk Factors
+            Possible Risk Factors
           </h3>
           
-          <ul className="factors-list">
-            {riskFactors.map((factor, index) => (
-              <li key={index} className="factor-item">
-                <span className="factor-name">{factor}</span>
+          <div className="factors-list">
+            {loanApplication.CreditScore < 650 && (
+              <div className="factor-item">
+                <span className="factor-name">Credit Score</span>
                 <span className="factor-description">
-                  {factor === 'Credit Score' && 'Credit score below optimal range'}
-                  {factor === 'Debt-to-Income Ratio' && 'High ratio of existing debt to income'}
-                  {factor === 'Employment History' && 'Limited employment history or instability'}
+                  Credit score of {loanApplication.CreditScore} is below optimal range
                 </span>
-              </li>
-            ))}
-          </ul>
+              </div>
+            )}
+            
+            {loanApplication.DTIRatio > 40 && (
+              <div className="factor-item">
+                <span className="factor-name">Debt-to-Income Ratio</span>
+                <span className="factor-description">
+                  DTI ratio of {loanApplication.DTIRatio}% exceeds recommended threshold
+                </span>
+              </div>
+            )}
+            
+            {loanApplication.MonthsEmployed < 12 && (
+              <div className="factor-item">
+                <span className="factor-name">Employment History</span>
+                <span className="factor-description">
+                  Employment history of {loanApplication.MonthsEmployed} months is limited
+                </span>
+              </div>
+            )}
+            
+            {loanApplication.LoanAmount > (loanApplication.Income * 0.5) && (
+              <div className="factor-item">
+                <span className="factor-name">Loan-to-Income Ratio</span>
+                <span className="factor-description">
+                  Loan amount is high relative to annual income
+                </span>
+              </div>
+            )}
+          </div>
           
           <div className="improvement-tips">
             <h4>How to Improve:</h4>
             <ul className="tips-list">
               <li>Pay down existing debts to improve debt-to-income ratio</li>
               <li>Make all bill payments on time to improve credit score</li>
-              <li>Maintain stable employment for at least 2 years</li>
+              <li>Maintain stable employment for at least 12 months</li>
               <li>Consider a co-signer if available</li>
               <li>Apply for a smaller loan amount</li>
             </ul>
@@ -180,37 +249,47 @@ function PredictionDetails({ result, customerData }) {
       <style jsx>{`
         .prediction-details {
           animation: fadeIn 0.5s ease-out;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        .card {
+          background-color: #fff;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          padding: 1.5rem;
+          margin-bottom: 1.5rem;
         }
         
         .prediction-result {
           display: flex;
           align-items: center;
-          padding: var(--space-4);
-          border-radius: var(--border-radius-md);
-          margin-bottom: var(--space-4);
+          padding: 1.5rem;
+          border-radius: 8px;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .prediction-result.approved {
           background-color: rgba(46, 139, 87, 0.1);
-          border-left: 5px solid var(--success);
+          border-left: 5px solid #2e8b57;
         }
         
         .prediction-result.rejected {
           background-color: rgba(220, 20, 60, 0.1);
-          border-left: 5px solid var(--error);
+          border-left: 5px solid #dc143c;
         }
         
         .result-icon {
           font-size: 3rem;
-          margin-right: var(--space-4);
+          margin-right: 1.5rem;
         }
         
         .approved .result-icon {
-          color: var(--success);
+          color: #2e8b57;
         }
         
         .rejected .result-icon {
-          color: var(--error);
+          color: #dc143c;
         }
         
         .result-content {
@@ -218,17 +297,17 @@ function PredictionDetails({ result, customerData }) {
         }
         
         .result-status {
-          font-size: var(--font-size-xl);
-          font-weight: var(--font-weight-bold);
-          margin: 0 0 var(--space-2) 0;
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin: 0 0 0.5rem 0;
         }
         
         .approved .result-status {
-          color: var(--success-dark);
+          color: #1e6641;
         }
         
         .rejected .result-status {
-          color: var(--error-dark);
+          color: #a01a2f;
         }
         
         .confidence-container {
@@ -237,60 +316,59 @@ function PredictionDetails({ result, customerData }) {
         }
         
         .confidence-label {
-          margin-right: var(--space-2);
-          font-weight: var(--font-weight-medium);
-          color: var(--neutral-700);
+          margin-right: 0.5rem;
+          font-weight: 500;
+          color: #4a5568;
         }
         
         .confidence-bar-container {
           flex: 1;
           height: 10px;
-          background-color: var(--neutral-200);
+          background-color: #e2e8f0;
           border-radius: 5px;
           overflow: hidden;
-          margin-right: var(--space-2);
+          margin-right: 0.5rem;
         }
         
         .confidence-bar {
           height: 100%;
           border-radius: 5px;
-          background-color: var(--primary);
           transition: width 1s ease-out;
         }
         
         .confidence-bar.approved {
-          background-color: var(--success);
+          background-color: #2e8b57;
         }
         
         .confidence-bar.rejected {
-          background-color: var(--error);
+          background-color: #dc143c;
         }
         
         .confidence-value {
-          font-weight: var(--font-weight-bold);
+          font-weight: 600;
           min-width: 50px;
         }
         
         .card-title {
           display: flex;
           align-items: center;
-          font-size: var(--font-size-lg);
+          font-size: 1.25rem;
           margin-top: 0;
-          margin-bottom: var(--space-3);
-          padding-bottom: var(--space-2);
-          border-bottom: 1px solid var(--neutral-200);
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid #e2e8f0;
         }
         
         .title-icon {
-          margin-right: var(--space-2);
-          color: var(--primary);
+          margin-right: 0.5rem;
+          color: #3182ce;
         }
         
         .details-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: var(--space-4);
-          margin-bottom: var(--space-4);
+          gap: 1.5rem;
+          margin-bottom: 1.5rem;
         }
         
         @media (max-width: 992px) {
@@ -311,68 +389,74 @@ function PredictionDetails({ result, customerData }) {
         }
         
         .detail-label {
-          font-size: var(--font-size-sm);
-          color: var(--neutral-600);
-          margin-bottom: var(--space-1);
+          font-size: 0.875rem;
+          color: #718096;
+          margin-bottom: 0.25rem;
         }
         
         .detail-value {
-          font-size: var(--font-size-lg);
-          font-weight: var(--font-weight-bold);
-          color: var(--neutral-900);
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: #2d3748;
         }
         
         .next-steps,
         .improvement-tips {
-          margin-top: var(--space-4);
-          background-color: var(--neutral-50);
-          padding: var(--space-3);
-          border-radius: var(--border-radius-sm);
+          margin-top: 1.5rem;
+          background-color: #f7fafc;
+          padding: 1rem;
+          border-radius: 6px;
         }
         
         .next-steps h4,
         .improvement-tips h4 {
           margin-top: 0;
-          margin-bottom: var(--space-2);
-          color: var(--primary);
+          margin-bottom: 0.5rem;
+          color: #3182ce;
         }
         
         .steps-list,
         .tips-list {
           margin: 0;
-          padding-left: var(--space-4);
+          padding-left: 1.5rem;
         }
         
         .steps-list li,
         .tips-list li {
-          margin-bottom: var(--space-2);
+          margin-bottom: 0.5rem;
         }
         
         .factors-list {
-          list-style: none;
-          padding: 0;
-          margin: 0 0 var(--space-3) 0;
+          margin: 0 0 1rem 0;
         }
         
         .factor-item {
           display: flex;
           flex-direction: column;
-          padding: var(--space-2);
-          background-color: var(--neutral-100);
-          border-left: 3px solid var(--warning);
-          margin-bottom: var(--space-2);
-          border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+          padding: 0.75rem;
+          background-color: #f7fafc;
+          border-left: 3px solid #ed8936;
+          margin-bottom: 0.5rem;
+          border-radius: 0 6px 6px 0;
         }
         
         .factor-name {
-          font-weight: var(--font-weight-medium);
-          margin-bottom: var(--space-1);
-          color: var(--neutral-800);
+          font-weight: 500;
+          margin-bottom: 0.25rem;
+          color: #4a5568;
         }
         
         .factor-description {
-          font-size: var(--font-size-sm);
-          color: var(--neutral-600);
+          font-size: 0.875rem;
+          color: #718096;
+        }
+        
+        .error-message {
+          color: #dc143c;
+          padding: 1rem;
+          border: 1px solid #dc143c;
+          border-radius: 6px;
+          margin-bottom: 1.5rem;
         }
         
         @keyframes fadeIn {

@@ -35,22 +35,22 @@ function RecentApplications({ applications }) {
             {applications.map((app) => (
               <tr key={app.id}>
                 <td>#{app.id.toString().padStart(5, '0')}</td>
-                <td>{app.customerName}</td>
-                <td>{new Date(app.date).toLocaleDateString()}</td>
-                <td>${app.amount.toLocaleString()}</td>
+                <td>{app.name}</td>
+                <td>{new Date(app.createdDate).toLocaleDateString()}</td>
+                <td>₹{app.loanAmount.toLocaleString()}</td>
                 <td>
-                  <span className={`status-badge ${app.status.toLowerCase()}`}>
-                    {app.status === 'Approved' ? <FaCheck /> : <FaTimes />}
+                  <span className={`status-badge ${app.status}`}>
+                    {app.status === true ? <FaCheck /> : <FaTimes />}
                     <span className="status-text">{app.status}</span>
                   </span>
                 </td>
                 <td>
                   <div className="confidence-bar-container">
                     <div 
-                      className={`confidence-bar ${app.status.toLowerCase()}`} 
-                      style={{ width: `${app.confidence}%` }}
+                      className={`confidence-bar ${app.status}`} 
+                      style={{ width: `${(app.confidence*100).toFixed(2)}%` }}
                     ></div>
-                    <span className="confidence-value">{app.confidence}%</span>
+                    <span className="confidence-value">{(app.confidence*100).toFixed(2)}%</span>
                   </div>
                 </td>
                 <td>

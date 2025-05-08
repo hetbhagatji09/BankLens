@@ -117,7 +117,7 @@ function ApprovedLoans() {
               <tr key={loan.id}>
                 <td>#{loan.id}</td>
                 <td>{loan.name}</td>
-                <td>${loan.loanAmount}</td>
+                <td>₹{loan.loanAmount}</td>
                 <td>{loan.loanPurpose}</td>
                 <td>{new Date(loan.createdDate).toLocaleDateString()}</td>
                 <td>
