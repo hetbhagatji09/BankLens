@@ -58,7 +58,7 @@ function RejectedLoans() {
   }, []);
   
   const filteredLoans = loans.filter(loan => 
-    loan.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    loan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     loan.id.toString().includes(searchTerm)
   );
 
@@ -122,17 +122,17 @@ function RejectedLoans() {
             {filteredLoans.map(loan => (
               <tr key={loan.id}>
                 <td>#{loan.id}</td>
-                <td>{loan.customerName}</td>
-                <td>${loan.amount.toLocaleString()}</td>
-                <td>{loan.reason}</td>
-                <td>{new Date(loan.date).toLocaleDateString()}</td>
+                <td>{loan.name}</td>
+                <td>{loan.loanAmount.toLocaleString()}</td>
+                <td>{loan.loanPurpose}</td>
+                <td>{new Date(loan.createdDate).toLocaleDateString()}</td>
                 <td>
                   <div className="confidence-bar-container">
                     <div 
                       className="confidence-bar"
                       style={{ width: `${loan.confidence}%` }}
                     ></div>
-                    <span className="confidence-value">{loan.confidence}%</span>
+                    <span className="confidence-value">{(loan.confidence*100).toFixed(2)}%</span>
                   </div>
                 </td>
               </tr>

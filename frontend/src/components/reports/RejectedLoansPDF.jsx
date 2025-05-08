@@ -90,13 +90,13 @@ function RejectedLoansPDF({ loans }) {
           {loans.map(loan => (
             <View key={loan.id} style={styles.tableRow}>
               <Text style={styles.tableCell}>#{loan.id}</Text>
-              <Text style={styles.tableCell}>{loan.customerName}</Text>
-              <Text style={styles.tableCell}>${loan.amount.toLocaleString()}</Text>
-              <Text style={styles.tableCell}>{loan.reason}</Text>
+              <Text style={styles.tableCell}>{loan.name}</Text>
+              <Text style={styles.tableCell}>{loan.loanAmount.toLocaleString()}</Text>
+              <Text style={styles.tableCell}>{loan.loanPurpose}</Text>
               <Text style={styles.tableCell}>
-                {new Date(loan.date).toLocaleDateString()}
+                {new Date(loan.createdDate).toLocaleDateString()}
               </Text>
-              <Text style={styles.tableCell}>{loan.confidence}%</Text>
+              <Text style={styles.tableCell}>{(loan.confidence*100).toFixed(2)}%</Text>
             </View>
           ))}
         </View>

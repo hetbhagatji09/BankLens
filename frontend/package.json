@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@react-pdf/renderer": "^3.1.14",
+    "bank-loan-prediction-system": "file:",
     "chart.js": "^4.4.0",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",

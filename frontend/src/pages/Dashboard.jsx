@@ -192,7 +192,7 @@ function Dashboard() {
           datasets: [
             {
               label: 'Approved',
-              data:monthly.approveApplicationCount ,
+              data:monthly.Approve ,
               backgroundColor: 'rgba(46, 139, 87, 0.6)',
               borderColor: 'rgba(46, 139, 87, 1)',
               borderWidth: 1,
@@ -200,7 +200,7 @@ function Dashboard() {
             },
             {
               label: 'Rejected',
-              data: monthly.rejectedApplicationCount,
+              data: monthly.Reject,
               backgroundColor: 'rgba(220, 20, 60, 0.6)',
               borderColor: 'rgba(220, 20, 60, 1)',
               borderWidth: 1,
@@ -220,11 +220,11 @@ function Dashboard() {
         const distribution = await distributionRes.json();
 
         const distributionChartData = {
-          labels: distribution.loanPurpose, 
+          labels: distribution.Purpose, 
           datasets: [
             {
               label: 'Purpose Count',
-              data: distribution.purposeCount, 
+              data: distribution.PurposeCount, 
               backgroundColor: [
                 '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'
               ],

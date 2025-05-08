@@ -91,13 +91,15 @@ function ApprovedLoansPDF({ loans }) {
           {loans.map(loan => (
             <View key={loan.id} style={styles.tableRow}>
               <Text style={styles.tableCell}>#{loan.id}</Text>
-              <Text style={styles.tableCell}>{loan.customerName}</Text>
-              <Text style={styles.tableCell}>${loan.amount.toLocaleString()}</Text>
-              <Text style={styles.tableCell}>{loan.purpose}</Text>
+              <Text style={styles.tableCell}>{loan.name}</Text>
               <Text style={styles.tableCell}>
-                {new Date(loan.date).toLocaleDateString()}
+                {loan?.loanAmount != null ? `${loan.loanAmount.toLocaleString()}` : 'N/A'}
               </Text>
-              <Text style={styles.tableCell}>{loan.confidence}%</Text>
+              <Text style={styles.tableCell}>{loan.loanPurpose}</Text>
+              <Text style={styles.tableCell}>
+                {new Date(loan.createdDate).toLocaleDateString()}
+              </Text>
+              <Text style={styles.tableCell}>{loan.confidence*100}%</Text>
             </View>
           ))}
         </View>
