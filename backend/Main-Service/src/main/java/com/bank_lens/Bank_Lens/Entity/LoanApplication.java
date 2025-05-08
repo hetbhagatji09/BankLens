@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Date;
 
 
 @Entity
@@ -61,15 +62,16 @@ public class LoanApplication {
 
     private Float Confidence;
 
-    @DateTimeFormat(pattern = "dd/MM/yyyy HH:mm:ss")
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     @Column(updatable = false, nullable = false)
-    private LocalDateTime createdDate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdDate;
 
     @PrePersist
     protected void onCreate() {
-        this.createdDate = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+        this.createdDate = new Date();
     }
+
+
 
     public Long getId() {
         return id;
@@ -231,11 +233,11 @@ public class LoanApplication {
         Confidence = confidence;
     }
 
-    public LocalDateTime getCreatedDate() {
+    public Date getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(LocalDateTime createdDate) {
+    public void setCreatedDate(Date createdDate) {
         this.createdDate = createdDate;
     }
 

@@ -4,13 +4,12 @@ import com.bank_lens.Bank_Lens.Entity.LoanApplication;
 import com.bank_lens.Bank_Lens.Service.LoanApplicationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 public class LoanApplicationController {
@@ -26,6 +25,29 @@ public class LoanApplicationController {
                                 @RequestParam("csv-file") MultipartFile multipartFile) throws JsonProcessingException {
         LoanApplication loanApplication = new ObjectMapper().readValue(loanDataJson, LoanApplication.class);
         return service.saveApplication(loanApplication, multipartFile);
+    }
+    @GetMapping("/monthly")
+    public Map<String,Object> getDashBoardMonthlyData(){
+        return service.daskBoardMonthlyChart();
+    }
+
+    @GetMapping("/pie-chart")
+    public Map<String,Object> getDashBoardPieChart(){
+        return service.daskBoardPieChart();
+    }
+
+    @GetMapping("/")
+    public List<LoanApplication> getCurrentYearData(){
+        return service.findByYear();
+    }
+
+    @GetMapping("/approve")
+    public List<LoanApplication> getCurrentYearDataOfApprove(){
+        return service.findByYearAndApprove();
+    }
+    @GetMapping("/reject")
+    public List<LoanApplication> getCurrentYearDataOfReject(){
+        return service.findByYearAndRejected();
     }
 
 
