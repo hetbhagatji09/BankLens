@@ -29,7 +29,7 @@ public class LoanApplicationService {
 
     public LoanApplicationService(FileUpload fileUpload, LoanApplicationRepository repository) {
         this.fileUpload = fileUpload;
-        this.repository = repository;
+        this.repository = repository  ;
     }
 
     public LoanApplication saveApplication(LoanApplication application, MultipartFile csvFile) {
